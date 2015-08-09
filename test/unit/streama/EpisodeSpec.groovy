@@ -5,9 +5,11 @@ import spock.lang.Specification
  * See the API for {@link grails.test.mixin.domain.DomainClassUnitTestMixin} for usage instructions
  */
 @TestFor(Episode)
-class EpisodeSpec extends Specification {
+class EpisodeSpec extends Specification
+{
 
-    void "test episode naming"() {
+    void "Test Episode Name Convention"()
+    {
       setup:
         def episode0 = Episode.newInstance()
         def episode1 = Episode.newInstance()

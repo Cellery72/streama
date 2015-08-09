@@ -19,7 +19,8 @@ class UserController {
   }
 
   @Transactional
-  def save(User userInstance) {
+  def save(User userInstance)
+  {
     if (userInstance == null) {
       render status: NOT_FOUND
       return
