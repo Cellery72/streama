@@ -54,8 +54,21 @@ class TheMovieDbService {
     return genres
   }
 
+  def getTrailerForMovie(movieId){
+    def JsonContent = new URL(BASE_URL + "/movie/$movieId/videos?api_key=$API_KEY").text
+    def videos =  new JsonSlurper().parseText(JsonContent).results
+
+    def trailer = videos.findAll{it.type == "Trailer"}.max{it.size}
+    return trailer
+  }
+
   def getFullMovieMeta(movieId){
     def JsonContent = new URL(BASE_URL + "/movie/$movieId?api_key=$API_KEY").text
+    return new JsonSlurper().parseText(JsonContent)
+  }
+
+  def getEpisodeMeta(tvApiId, seasonNumber, episodeNumber){
+    def JsonContent = new URL(BASE_URL + "/tv/$tvApiId/season/$seasonNumber/episode/$episodeNumber?api_key=$API_KEY").text
     return new JsonSlurper().parseText(JsonContent)
   }
 }

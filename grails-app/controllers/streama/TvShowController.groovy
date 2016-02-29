@@ -31,7 +31,7 @@ class TvShowController {
     TvShow tvShowInstance = TvShow.findOrCreateById(data.id)
     tvShowInstance.properties = data
 
-    if(!tvShowInstance.imdb_id){
+    if(!tvShowInstance.imdb_id && !data.manualInput){
       tvShowInstance.imdb_id = tvShowInstance.externalLinks?.imdb_id
     }
 
@@ -52,7 +52,15 @@ class TvShowController {
   }
 
   def episodesForTvShow(TvShow tvShowInstance) {
-    respond Episode.findAllByShow(tvShowInstance), [status: OK]
+    JSON.use('episodesForTvShow') {
+      respond Episode.findAllByShowAndDeletedNotEqual(tvShowInstance, true), [status: OK]
+    }
+  }
+
+  def adminEpisodesForTvShow(TvShow tvShowInstance) {
+    JSON.use('adminEpisodesForTvShow') {
+      respond Episode.findAllByShowAndDeletedNotEqual(tvShowInstance, true), [status: OK]
+    }
   }
 
   @Transactional
@@ -65,6 +73,21 @@ class TvShowController {
 
     tvShowInstance.deleted = true
     tvShowInstance.save flush: true, failOnError: true
+
+    render status: NO_CONTENT
+  }
+
+  @Transactional
+  def removeSeason() {
+    TvShow tvShow = TvShow.get(params.getInt('showId'))
+    int season = params.getInt('season_number')
+
+    if (!tvShow || season == null) {
+      render status: NOT_FOUND
+      return
+    }
+
+    Episode.findAllByShowAndSeason_number(tvShow, season)*.delete()
 
     render status: NO_CONTENT
   }

@@ -26,19 +26,18 @@ streamaApp.controller('adminMovieCtrl', [
 			})
 		};
 
+		$scope.addToCurrentNotification = function(){
+			apiService.notification.addMovieToCurrentNotification($stateParams.movieId).success(function () {
+				alertify.success('The movie was added to the current notification queue.');
+			});
+		};
 
-    $scope.removeFile = function(file){
-      alertify.confirm('Are you sure you want to remove the file "'+file.originalFilename+'"?', function (confirmed) {
-        if(confirmed){
-          apiService.video.removeFile($scope.movie.id, file.id).success(function () {
-            _.remove($scope.movie.files, {id: file.id});
-          });
-        }
-      });
+    $scope.manageFiles = function(movie){
+      modalService.fileManagerModal(movie);
     };
 
 
-		$scope.addSimilarMovieToStreama = function(movie){
+		$scope.addSimilarMovieToStreama = function(movie, redirect){
       alertify.set({
         buttonReverse: true,
         labels: {
@@ -54,7 +53,9 @@ streamaApp.controller('adminMovieCtrl', [
           movie.apiId = apiId;
 
           apiService.movie.save(movie).success(function (data) {
-            $state.go('admin.movie', {movieId: data.id});
+						if(redirect){
+							$state.go('admin.movie', {movieId: data.id});
+						}
           });
 				}
 			})
@@ -67,5 +68,36 @@ streamaApp.controller('adminMovieCtrl', [
 			$scope.movie.files = $scope.movie.files || [];
 			$scope.movie.files.push(data);
 		});
+
+
+
+		$scope.onTagSelect = function (tag) {
+			apiService.tag.save(tag);
+			apiService.movie.save($scope.movie);
+		};
+
+		$scope.tagTransform = function (newTag) {
+			var item = {
+				name: newTag,
+				isNew: true
+			};
+
+			return item;
+		};
+
+		$scope.deleteTag = function (tag) {
+				alertify.confirm('Are you sure you want to delete the tag ' + tag.name, function (confirmed) {
+					if(confirmed){
+						apiService.tag.delete(tag.id).success(function () {
+							_.remove($scope.tags, {id: tag.id});
+						})
+					}
+				});
+		};
+
+		apiService.tag.list().success(function (data) {
+			$scope.tags = data;
+		});
+
 
 }]);

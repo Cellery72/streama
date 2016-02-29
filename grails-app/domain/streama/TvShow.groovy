@@ -6,6 +6,8 @@ class TvShow {
 
 
   Boolean deleted = false
+  Boolean manualInput = false
+
   Date dateCreated
   Date lastUpdated
 
@@ -22,8 +24,17 @@ class TvShow {
   Double vote_average
   Integer vote_count
   Double popularity
-
   static hasMany = [episodes: Episode]
+
+
+  File poster_image
+  File backdrop_image
+
+  static mapping = {
+    cache true
+    episodes cache: true
+  }
+
 
   static constraints = {
       name nullable: false

@@ -18,6 +18,7 @@ class User {
 	boolean accountLocked
 	boolean passwordExpired
 	boolean invitationSent = false
+	boolean pauseVideoOnClick = true
 	String uuid
 
   String fullName
@@ -35,6 +36,7 @@ class User {
 
 	static mapping = {
 		password column: '`password`'
+		cache true
 	}
 
 	Set<Role> getAuthorities() {

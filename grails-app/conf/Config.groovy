@@ -11,6 +11,8 @@
 //    grails.config.locations << "file:" + System.properties["${appName}.config.location"]
 // }
 
+grails.config.locations = ['file:/streama-data/config.properties']
+
 grails.project.groupId = appName // change this to alter the default package name and Maven publishing destination
 
 // The ACCEPT header will not be used for content negotiation for user agents containing the following strings (defaults to the 4 major rendering engines)
@@ -142,6 +144,8 @@ log4j.main = {
 }
 
 
+grails.mail.default.from = "Streama.club <info@streama.club>"
+
 
 grails.databinding.dateFormats = [
     "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", // javascript format in json
@@ -149,11 +153,14 @@ grails.databinding.dateFormats = [
     "yyyy-MM-dd'T'hh:mm:ss'Z'"
 ]
 
+grails.app.context="/"
+
 // Added by the Spring Security Core plugin:
 grails.plugin.springsecurity.userLookup.userDomainClassName = 'streama.User'
 grails.plugin.springsecurity.userLookup.authorityJoinClassName = 'streama.UserRole'
 grails.plugin.springsecurity.authority.className = 'streama.Role'
 grails.plugin.springsecurity.successHandler.defaultTargetUrl = '/user/loginTarget'
+grails.plugin.springsecurity.successHandler.alwaysUseDefault = true
 //
 //grails.plugin.springsecurity.useSecurityEventListener = true
 //grails.plugin.springsecurity.onAbstractAuthenticationFailureEvent = { e, appCtx ->
@@ -177,16 +184,22 @@ grails.plugin.springsecurity.controllerAnnotations.staticRules = [
 	'/user/saveProfile':                ['IS_AUTHENTICATED_REMEMBERED'],
 	'/user/changePassword':             ['IS_AUTHENTICATED_REMEMBERED'],
 	'/theMovieDb/availableGenres':      ['IS_AUTHENTICATED_REMEMBERED'],
+	'/user/loginTarget':                ['IS_AUTHENTICATED_REMEMBERED'],
+	'/dash/**':                         ['IS_AUTHENTICATED_REMEMBERED'],
 
   '/tvShow/**':                       ['ROLE_CONTENT_MANAGER'],
   '/video/**':                        ['ROLE_CONTENT_MANAGER'],
   '/theMovieDb/**':                   ['ROLE_CONTENT_MANAGER'],
   '/movie/**':                        ['ROLE_CONTENT_MANAGER'],
   '/episode/**':                      ['ROLE_CONTENT_MANAGER'],
+  '/tag/**':                          ['ROLE_CONTENT_MANAGER'],
 
 	'/user/**':                         ['ROLE_ADMIN'],
+	'/notificationQueue/**':            ['ROLE_ADMIN'],
 	'/settings/**':                     ['ROLE_ADMIN'],
   '/bulk/**':                         ['ROLE_ADMIN'],
+  '/monitoring/**':                   ['ROLE_ADMIN'],
+  '/file/upload':                     ['ROLE_ADMIN'],
 
 
   '/user/current':                    ['permitAll'],
@@ -197,4 +210,3 @@ grails.plugin.springsecurity.controllerAnnotations.staticRules = [
 	'/**/images/**':                    ['permitAll'],
 	'/**/favicon.ico':                  ['permitAll']
 ]
-

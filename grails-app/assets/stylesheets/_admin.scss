@@ -6,23 +6,23 @@
   left: 0;
   right: 0;
 
-  
-  
+
+
   .nav{
     width: 300px;
     background: rgba(0, 0, 0, 0.15);
     border-right: 1px solid rgba(255, 255, 255, 0.11);
     @include flex(none);
-    
+
     ul{
       padding: 0;
-      
+
       li{
         list-style: none;
         font-size: 18px;
         font-weight: 300;
         border-bottom: 1px solid rgba(255, 255, 255, 0.09);
-        
+
         a{
           color: white;
           display: block;
@@ -35,7 +35,7 @@
           background: darken($primary, 40%);
           color: white;
         }
-        
+
         ul li{
           padding: 10px;
         }
@@ -46,18 +46,22 @@
   .form-control{
     color: white;
   }
-  
+
   @include placeholder{
     color: #888;
     font-weight: 300;
   }
-  
+
   .admin-content{
     padding: 15px;
     @include flex(1);
-    overflow: auto;
+    overflow-y: scroll;
+
+    h1{
+      margin-top: 0;
+    }
   }
-  
+
   .media-list-item{
     margin-top: 15px;
   }
@@ -70,4 +74,85 @@
 
   border: 1px solid rgba(255, 255, 255, 0.17);
   background-color: rgba(0, 0, 0, 0.08);
+}
+
+.admin-movie-item{
+  min-height: 260px;
+}
+
+.season-picker-list{
+  margin-bottom: 14px;
+
+  .season-picker-item{
+    padding: 3px 10px;
+    border: 1px solid transparent;
+    border-radius: 25px;
+
+    &.active{
+      border: 1px solid white;
+    }
+
+  }
+}
+
+
+.upload-poster{
+  padding: 20px;
+  border: 2px dashed gray;
+  border-radius: 20px;
+  height: 300px;
+  max-width: 250px;
+  text-align: center;
+
+  .main-text{
+    display: block;
+    font-size: 30px;
+    margin-top: 85px;
+  }
+
+  .size-info{
+    display: block;
+  }
+
+  &.dragover{
+    border: 2px dashed white;
+    background: #2898c5;
+  }
+
+  &.update-poster{
+    height: auto;
+    margin-top: 15px;
+    max-width: inherit;
+
+    .main-text{
+      margin-top: 0px;
+    }
+  }
+}
+
+hr{
+  display: block;
+  clear: both;
+}
+
+
+.ui-select-bootstrap .ui-select-choices-row>a{
+  color: white;
+}
+
+.ui-select-multiple input.ui-select-search {
+  width: inherit !important;
+  color: white;
+}
+
+.tag-select{
+  .tag-wrapper{
+    @include flexbox;
+    .tag-name{
+      @include flex(1);
+    }
+    i{
+      @include flex(none);
+    }
+  }
 }

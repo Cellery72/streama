@@ -7,3 +7,31 @@
   }  
 
 }
+
+.modal-media-detail{
+  max-height:inherit !important;
+
+  .info-list{
+    margin: 0;
+    padding: 0;
+
+    li{
+      list-style: none;
+
+      strong{
+        margin-right: 6px;
+        min-width: 86px;
+        display: inline-block;
+      }
+    }
+  }
+
+  .overview-text{
+    font-size: 14px;
+  }
+
+  .media-list-item.episode-wrapper{
+    margin-bottom: 0px;
+    margin-right: 9px;
+  }
+}

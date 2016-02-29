@@ -1,7 +1,10 @@
 'use strict';
 
-streamaApp.controller('dashCtrl', ['$scope', 'apiService', '$state', '$rootScope', function ($scope, apiService, $state, $rootScope) {
+streamaApp.controller('dashCtrl', [
+  '$scope', 'apiService', '$state', '$rootScope', 'localStorageService', 'modalService',
+  function ($scope, apiService, $state, $rootScope, localStorageService, modalService) {
 	$scope.loading = true;
+
 
   if($rootScope.currentUser.isAdmin){
     apiService.settings.list().success(function (data) {
@@ -15,12 +18,26 @@ streamaApp.controller('dashCtrl', ['$scope', 'apiService', '$state', '$rootScope
     });
   }
 
+  $scope.showDetails = function (media) {
+    modalService.mediaDetailModal(media);
+  };
+
+
+  $scope.markCompleted = function (viewingStatus) {
+    alertify.confirm("Are you sure you want to mark this video as completed?", function (confirmed) {
+      if(confirmed){
+        apiService.viewingStatus.markCompleted(viewingStatus).success(function (data) {
+          _.remove($scope.continueWatching, {'id': data.id});
+        });
+      }
+    })
+  };
 
 
 
   apiService.video.dash()
     .success(function (data) {
-      $scope.episodes = data.firstEpisodes;
+      $scope.tvShows = data.tvShowsForDash;
       $scope.continueWatching = data.continueWatching;
       $scope.movies = data.movies;
       $scope.loading = false;

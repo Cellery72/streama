@@ -1,7 +1,7 @@
 'use strict';
 
 var streamaApp = angular.module('streamaApp', [
-	'ui.router', 'ui.bootstrap', 'ngFileUpload', 'ui.slider', 'LocalStorageModule'
+	'ui.router', 'ui.bootstrap', 'ngFileUpload', 'ui.slider', 'LocalStorageModule', 'ui.select', 'ngSanitize'
 ]);
 
 
@@ -115,6 +115,23 @@ streamaApp.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', func
         }]
       }
 		})
+		.state('admin.notifications', {
+			url: '/notifications',
+			templateUrl: 'admin-notifications.htm',
+			controller: 'adminNotificationsCtrl',
+      resolve: {
+        currentUser: ['apiService', '$rootScope', '$state', function (apiService, $rootScope, $state) {
+          return apiService.currentUser().success(function (data) {
+            if (data.isAdmin) {
+              $rootScope.currentUser = data;
+              return data;
+            } else {
+              $state.go('dash');
+            }
+          });
+        }]
+      }
+		})
 		.state('admin.shows', {
 			url: '/shows',
 			templateUrl: 'admin-shows.htm',
@@ -139,7 +156,9 @@ streamaApp.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', func
 		return {
 			request: function (config) {
 				config.params = config.params || {};
-				config.params.browserSocketUUID = $rootScope.browserSocketUUID;
+        if(config.params.socketSessionId){
+          config.params.browserSocketUUID = $rootScope.browserSocketUUID;
+        }
 				return config || $q.when(config);
 			},
 			response: function (response) {
@@ -151,7 +170,7 @@ streamaApp.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', func
           alertify.error('You do not have the rights to carry out this action.');
         }
         else if(response.status != 404 && response.status != 401 && response.status != 406){
-          alertify.error('A system error occurred');
+          //alertify.error('A system error occurred');
         }
 
 
@@ -161,8 +180,36 @@ streamaApp.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', func
 	}]);
 
 
-streamaApp.run(['$rootScope', '$state', 'apiService', function ($rootScope, $state, apiService) {
-	$rootScope.isCurrentState = function (stateName) {
-		return ($state.current.name == stateName);
-	};
+streamaApp.run(
+  ['$rootScope', '$state', 'localStorageService', 'apiService',
+  function ($rootScope, $state, localStorageService, apiService) {
+
+    $rootScope.baseData = {};
+    $rootScope.isCurrentState = function (stateName) {
+      return ($state.current.name == stateName);
+    };
+
+    $rootScope.searchMedia = function (query) {
+      return apiService.dash.searchMedia(query).then(function (data) {
+        return data.data.movies.concat(data.data.shows);
+      });
+    };
+
+    $rootScope.selectFromSearch = function (item) {
+			if(item.hasFiles){
+				var id;
+				if(item.firstEpisode){
+					id = item.firstEpisode.id;
+				}else{
+					id = item.id;
+				}
+				$state.go('player', {videoId: id});
+			}
+    };
+
+    $rootScope.$on('$stateChangeSuccess', function (e, toState) {
+      if(toState.name == "player"){
+        localStorageService.set('originUrl', location.href);
+      }
+    });
 }]);

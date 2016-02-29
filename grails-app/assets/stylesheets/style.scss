@@ -1,7 +1,10 @@
+@import "icomoon/style.css";
+
 @import "mixins";
 @import "variables";
 @import "util";
 @import "btn";
+@import "alertify";
 
 @import "main";
 @import "media-display";
@@ -16,3 +19,5 @@
 @import "settings";
 @import "profile";
 @import "genre";
+
+@import "media";

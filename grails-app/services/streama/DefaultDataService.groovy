@@ -47,20 +47,35 @@ class DefaultDataService {
         [
             settingsKey: 'Upload Directory',
             description: 'This setting provides the application with your desired upload-path for all files. ' +
-              'The default so far has been /data/streama. Remember: if you change this path, copy all the files (that were previously added) into the new directory.',
+                'The default so far has been /data/streama. Remember: if you change this path, copy all the files (that were previously added) into the new directory.',
+            settingsType: 'string',
             required: true
         ],
         [
             settingsKey: 'TheMovieDB API key',
             description: 'This API-key is required by the application to fetch all the nice Movie/Episode/Show data for you. Get one for free at https://www.themoviedb.org/',
+            settingsType: 'string',
             required: true
         ],
         [
             settingsKey: 'Base URL',
-            value: 'http://localhost:8080/streama',
+            value: 'http://localhost:8080',
             description: 'The Base-URL is used for the videos and the link in the invitation-email.',
+            settingsType: 'string',
             required: true
         ],
+        [
+            settingsKey: 'Second Directory',
+            description: 'This directory is not used for uploading of new files, only for playback of existing files. This can be useful if you want to spread your video files over two directories, for instance by mounting a second drive.',
+            settingsType: 'string',
+            required: false
+        ],
+//        [
+//            settingsKey: 'Remove Source After Convert',
+//            value: 'yes',
+//            settingsType: 'radio',
+//            description: 'If this is set to "yes", after successful file-conversion the original file will be removed from the Upload Directory. This may be useful in case you have limited disk space.'
+//        ],
     ]
 
     settings.each{ settingData ->

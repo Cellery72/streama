@@ -10,10 +10,14 @@ class Movie extends Video{
 
   String backdrop_path
   String poster_path
+  String trailerKey
 
   static constraints = {
   }
 
+  static mapping = {
+    cache true
+  }
 
   def getSimilarMovies(){
     theMovieDbService.getSimilarMovies(this.apiId)

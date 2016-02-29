@@ -8,158 +8,166 @@ import grails.transaction.Transactional
 @Transactional(readOnly = true)
 class VideoController {
 
-    static responseFormats = ['json', 'xml']
-    static allowedMethods = [save: "POST", delete: "DELETE"]
+  static responseFormats = ['json', 'xml']
+  static allowedMethods = [save: "POST", delete: "DELETE"]
 
-    def thetvdbService
-    def uploadService
-    def springSecurityService
+  def thetvdbService
+  def uploadService
+  def springSecurityService
+  def mediaService
+
     
-    def index() {
-        respond Video.list(), [status: OK]
+  def index() {
+    respond Video.findAllByDeletedNotEqual(true), [status: OK]
+  }
+
+  def dash() {
+    User currentUser = springSecurityService.currentUser
+    def result = [:]
+
+    def tvShows = TvShow.findAllByDeletedNotEqual(true)
+
+    def continueWatching = ViewingStatus.withCriteria {
+      eq("user", currentUser)
+      video{
+        isNotEmpty("files")
+        ne("deleted", true)
+      }
+      eq("completed", false)
+      order("lastUpdated", "desc")
+    }
+    def movies = Movie.findAllByDeletedNotEqual(true).findAll{ Movie movie ->
+      return (!continueWatching.find{it.video.id == movie.id} && movie.files)
     }
 
-    def dash() {
-        User currentUser = springSecurityService.currentUser
-        def result = [:]
-         
-        def tvShows = TvShow.findAllByDeletedNotEqual(true)
-
-        def continueWatching = ViewingStatus.findAllByUser(currentUser)
-
-        def movies = Movie.list().findAll{ Movie movie ->
-            return (!continueWatching.find{it.video.id == movie.id} && movie.files)
-        }
-        
-        HashSet<Video> firstEpisodes = []
-
-        tvShows?.each{ tvShow->
-            
-            if(continueWatching.find{(it.video instanceof Episode) && it.video.show?.id == tvShow?.id}){
-                return 
-            }
-
-            Episode firstEpisode = tvShow.episodes?.find{it.files && it.season_number != "0"}
-
-            tvShow.episodes.each{ Episode episode ->
-                if((episode.season_number == firstEpisode?.season_number) && (episode.episode_number < firstEpisode?.episode_number) && episode.files){
-                    firstEpisode = episode
-                }
-                else if(episode.season_number < firstEpisode?.season_number && episode.files && episode.season_number != "0"){
-                    firstEpisode = episode
-                }
-            }
-
-            if(firstEpisode && firstEpisode.files){
-                firstEpisodes.add(firstEpisode)
-            }
-
-        }
-        
-        result.firstEpisodes = firstEpisodes
-        result.movies = movies
-        result.continueWatching = continueWatching
-        
-        JSON.use('fullViewingStatus'){
-            respond result
-        }
+    result.tvShowsForDash = tvShows.findAll{tvShow->
+      !(continueWatching.find{(it.video instanceof Episode) && it.video.show?.id == tvShow?.id}) && tvShow.episodes
     }
 
-    @Transactional
-    def save() {
-
-        def data = request.JSON
-        Video videoInstance
-
-        if (data == null) {
-            render status: NOT_FOUND
-            return
-        }
-        if(!data.id){
-            if(data.image){
-                data.image = thetvdbService.BASE_PATH_GRAPHICS + data.image
-            }
-            videoInstance = new Video()
-        }else{
-            videoInstance = Video.get(data.id)
-        }
-        
-        videoInstance.properties = data
-
-        videoInstance.validate()
-        if (videoInstance.hasErrors()) {
-            render status: NOT_ACCEPTABLE
-            return
-        }
-
-        videoInstance.save flush:true
-        respond videoInstance, [status: CREATED]
+    JSON.use('dashMovies'){
+      result.movies = JSON.parse((movies as JSON).toString())
     }
 
-    def show(Video videoInstance){
-        respond videoInstance, [status: OK]
+    JSON.use ('dashViewingStatus') {
+      result.continueWatching = JSON.parse((continueWatching as JSON).toString())
     }
 
+    respond result
+  }
 
-    @Transactional
-    def delete(Video videoInstance) {
+  @Transactional
+  def save() {
 
-        if (videoInstance == null) {
-            render status: NOT_FOUND
-            return
-        }
+    def data = request.JSON
+    Video videoInstance
 
-        videoInstance.delete flush:true
-        render status: NO_CONTENT
+    if (data == null) {
+      render status: NOT_FOUND
+      return
+    }
+    if(!data.id){
+      if(data.image){
+        data.image = thetvdbService.BASE_PATH_GRAPHICS + data.image
+      }
+      videoInstance = new Video()
+    }else{
+      videoInstance = Video.get(data.id)
     }
 
-    @Transactional
-    def uploadFile(Video videoInstance) {
+    videoInstance.properties = data
 
-        if (videoInstance == null) {
-            render status: NOT_FOUND
-            return
-        }
-
-        def file = uploadService.upload(request)
-        videoInstance.addToFiles(file)
-        videoInstance.save flush: true, failOnError: true
-
-        respond file
-        
+    videoInstance.validate()
+    if (videoInstance.hasErrors()) {
+      render status: NOT_ACCEPTABLE
+      return
     }
 
-    @Transactional
-    def removeFile() {
-        
-        Video video = Video.get(params.getInt('videoId'))
-        File file = File.get(params.getInt('fileId'))
+    videoInstance.save flush:true
+    respond videoInstance, [status: CREATED]
+  }
 
-        if (!video || !file) {
-            render status: NOT_FOUND
-            return
-        }
+  def show(Video videoInstance){
+    respond videoInstance, [status: OK]
+  }
 
-        video.removeFromFiles(file)
-        video.save flush: true, failOnError: true
 
-        respond status: OK
-        
+  @Transactional
+  def delete(Video videoInstance) {
+
+    if (videoInstance == null) {
+      render status: NOT_FOUND
+      return
     }
-    @Transactional
-    def addFile() {
-        Video video = Video.get(params.getInt('videoId'))
-        File file = File.get(params.getInt('fileId'))
 
-        if (!video || !file) {
-            render status: NOT_FOUND
-            return
-        }
+    videoInstance.deleted = true
+    videoInstance.save failOnError: true, flush: true
+    render status: NO_CONTENT
+  }
 
-        video.addToFiles(file)
-        video.save flush: true, failOnError: true
+  @Transactional
+  def uploadFile(Video videoInstance) {
 
-        respond status: OK
-
+    if (videoInstance == null) {
+      render status: NOT_FOUND
+      return
     }
+
+    def file = uploadService.upload(request)
+    videoInstance.addToFiles(file)
+    videoInstance.save flush: true, failOnError: true
+
+    respond file
+
+  }
+
+  @Transactional
+  def removeFile() {
+
+    Video video = Video.get(params.getInt('videoId'))
+    File file = File.get(params.getInt('fileId'))
+
+    if (!video || !file) {
+      render status: NOT_FOUND
+      return
+    }
+
+    video.removeFromFiles(file)
+    video.save flush: true, failOnError: true
+
+    respond status: OK
+
+  }
+  @Transactional
+  def addFile() {
+    Video video = Video.get(params.getInt('videoId'))
+    File file = File.get(params.getInt('fileId'))
+
+    if (!video || !file) {
+      render status: NOT_FOUND
+      return
+    }
+
+    video.addToFiles(file)
+    video.save flush: true, failOnError: true
+
+    respond status: OK
+
+  }
+
+  @Transactional
+  def refetch() {
+    Episode episode = Episode.get(params.getInt('videoId'))
+
+    if (!episode) {
+      render status: NOT_FOUND
+      return
+    }
+
+    log.debug(episode.movieDbMeta)
+    bindData(episode, episode.movieDbMeta, [exclude: 'id'])
+    episode.save flush: true, failOnError: true
+
+    respond episode
+
+  }
 }

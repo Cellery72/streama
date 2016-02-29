@@ -13,10 +13,15 @@ class Video {
   Integer vote_count
   Double popularity
 
+  Boolean deleted = false
   String imdb_id
 
   static hasMany = [files: File]
 
+  static mapping = {
+    cache true
+    files cache: true
+  }
 
   static constraints = {
     overview size: 1..5000

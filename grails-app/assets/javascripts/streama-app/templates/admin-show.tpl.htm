@@ -3,31 +3,42 @@
   <li class="active">{{show.name}}</li>
 </ul>
 
-<div class="clearfix">
-  <h1 class="pull-left">
-    {{show.name}}
 
-    <div class="spinner" ng-show="loading">
-      <div class="bounce1"></div>
-      <div class="bounce2"></div>
-      <div class="bounce3"></div>
-    </div>
-  </h1>
 
-  <div class="btn-group pull-right">
-    <button class="btn btn-danger btn-sm" ng-click="deleteShow()">
-      Delete show
-    </button>
-    <button class="btn btn-secondary btn-sm" ng-click="openShowModal()">
-      Edit show
-    </button>
-  </div>
-</div>
-
-<hr/>
 
 <div class="row">
   <div class="col-md-8">
+
+    <div class="row">
+
+      <div class="col-md-6">
+        <h1>
+          {{show.name}}
+
+          <div class="spinner" ng-show="loading">
+            <div class="bounce1"></div>
+            <div class="bounce2"></div>
+            <div class="bounce3"></div>
+          </div>
+        </h1>
+      </div>
+
+      <div class="col-md-6">
+        <div class="btn-group pull-right">
+          <button class="btn btn-danger btn-sm" ng-click="deleteShow()">
+            Delete show
+          </button>
+          <button class="btn btn-secondary btn-sm" ng-click="openShowModal()">
+            Edit show
+          </button>
+          <button class="btn btn-secondary btn-sm " ng-click="addToCurrentNotification()">
+            Add Notification
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <hr>
 
     <div class="row">
       <div class="col-sm-2">
@@ -36,7 +47,7 @@
       </div>
       <div class="col-sm-2">
         <label>IMDB Link</label>
-        <p class="data-display"><a href="http://www.imdb.com/title/{{show.imdb_id}}">{{show.name}}</a></p>
+        <p class="data-display" ng-if="show.imdb_id"><a href="http://www.imdb.com/title/{{show.imdb_id}}">{{show.name}}</a></p>
       </div>
       <div class="col-sm-2">
         <label>Rating</label>
@@ -46,7 +57,7 @@
         <label>Rating Count</label>
         <p class="data-display">{{show.vote_count}}</p>
       </div>
-      <div class="col-sm-2">
+      <div class="col-sm-2" ng-show="!show.manualInput">
         <label>API ID</label>
         <p class="data-display">{{show.apiId}}</p>
       </div>
@@ -64,26 +75,61 @@
   </div>
 
   <div class="col-sm-4">
-    <img ng-src="https://image.tmdb.org/t/p/w500/{{show.backdrop_path}}"/>
+    <div ng-if="!show.manualInput">
+      <img ng-show="show.poster_path" ng-src="https://image.tmdb.org/t/p/w500/{{show.poster_path}}"/>
+      <img ng-show="!show.poster_path" ng-src="{{basePath}}assets/poster-not-found.png"/>
+    </div>
+
+    <div ng-if="show.manualInput">
+      <img ng-show="show.poster_image_src" ng-src="{{show.poster_image_src}}"/>
+
+      <div class="upload-poster" ng-class="{'update-poster': show.poster_image_src}" ng-model="manualPoster" class="btn btn-primary btn-block btn-lg"
+           ngf-change="uploadPoster($files)" ngf-select ngf-drop ngf-drag-over-class="dragover">
+        <span class="main-text">Upload Poster</span>
+        <span class="size-info">300x450 px</span>
+        <span ng-show="imageUpload.percentage">{{imageUpload.percentage}}%</span>
+      </div>
+    </div>
   </div>
 </div>
 
 
-
-
-
 <hr/>
 <br/><br/>
-<button class="btn btn-primary" ng-click="addNewEpisode()">Add New Episode Manually</button>
-<button class="btn btn-primary" ng-click="fetchAllEpisodesForSeason()">Fetch all Episode for Season</button>
 
-<div ng-if="!seasons" class="data-display">No Episodes yet</div>
 
-<div ng-repeat="(season, episodes) in seasons | orderBy:'season'" ng-if="!episode.deleted" class="season-wrapper">
-  <h3 class="uppercase">Season {{season}}</h3>
+<div class="spinner" ng-show="showLoading">
+  <div class="bounce1"></div>
+  <div class="bounce2"></div>
+  <div class="bounce3"></div>
+</div>
 
-  <div class="media-list">
-    <admin-episode episode="episode" ng-repeat="episode in episodes | orderBy:'episode_number'" ></admin-episode>
+<div ng-show="!showLoading">
+
+  <button class="btn btn-primary" ng-click="addNewEpisode()">Add New Episode Manually</button>
+  <button class="btn btn-primary" ng-click="fetchAllEpisodesForSeason()" ng-if="!show.manualInput">Fetch all Episode for Season</button>
+
+  <div ng-if="!seasons" class="no-episodes-yet">No Episodes yet</div>
+
+  <div ng-if="seasons">
+    <hr>
+
+    <div class="season-picker-list">
+      <span class="season-picker-item" ng-class="{'active': currentSeason == season}" ng-click="setCurrentSeason(season)"
+            ng-repeat="(season, episodes) in seasons | orderBy:'season'">
+        Season {{season}}
+      </span>
+    </div>
+
+    <div class="season-wrapper">
+      <div class="btn-group">
+        <button ng-click="refetchSeason(currentSeason)" class="btn btn-xs">Re-fetch Season</button>
+        <button ng-click="deleteSeason(currentSeason)" class="btn btn-danger btn-xs">Delete Season</button>
+      </div>
+      <div class="media-list">
+        <admin-episode episode="episode" ng-repeat="episode in seasons[currentSeason] | orderBy:'episode_number'" ></admin-episode>
+      </div>
+    </div>
   </div>
 </div>
 
